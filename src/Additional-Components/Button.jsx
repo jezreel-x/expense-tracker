@@ -21,16 +21,27 @@ const Button = styled.button`
 `;
 
 const fadeIn = keyframes`
+    from {
+        opacity: 0
+    }
     to {
         opacity: 1;
-        transform: scale(1.2);
+    }
+`;
+
+const fadeOut = keyframes`
+    from {
+        opacity: 1
+    }
+    to {
+        opacity: 0
     }
 `;
 
 export const MainDiv = styled.div`
     display: flex;
     flex-direction: row;
-    width: 480px;
+    width: 580px;
     margin: auto;
     padding: 12px;
 `;
@@ -54,6 +65,10 @@ export const SubmitButton = styled(Button).attrs({
     }
 `;
 
+
+export const FadeButton = styled.div`
+    animation: ${props => (props.fadeOut ? fadeOut : fadeIn)} 2s ease-in-out infinite;
+`;
 
 
 export default Button;
