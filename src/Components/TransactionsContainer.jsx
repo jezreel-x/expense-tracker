@@ -25,23 +25,24 @@ const TransactionsContainer = ({ transactions, removeTransaction }) => {
   const [searchInput, setSearchInput] = useState("");
   const [filteredTransactions, setFilteredTransactions] = useState(transactions);
 
-  const filteredData = (searchInput) => {
-    if (!searchInput || !searchInput.trim().length) {
-      setFilteredTransactions(transactions);
-      return;
-    }
-
-    let filtered = [...filteredTransactions];
-    filtered = filtered.filter(
-      (item) =>
-        item.details.toLowerCase().includes(searchInput.toLowerCase().trim())
-    );
-    setFilteredTransactions(filtered);
-  };
-
   useEffect(() => {
+
+    const filteredData = (searchInput) => {
+      if (!searchInput || !searchInput.trim().length) {
+        setFilteredTransactions(transactions);
+        return;
+      }
+  
+      let filtered = [...filteredTransactions];
+      filtered = filtered.filter(
+        (item) =>
+          item.details.toLowerCase().includes(searchInput.toLowerCase().trim())
+      );
+      setFilteredTransactions(filtered);
+    };
+
     filteredData(searchInput);
-  }, [transactions, searchInput]);
+  }, [transactions, searchInput, filteredTransactions]);
 
   return (
     <Container>
