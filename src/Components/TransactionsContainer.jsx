@@ -12,10 +12,9 @@ const Heading = styled.h2`
 const SearchInput = styled.input`
   width: 100%;
   padding: 15px 20px;
-  outline: none;
   border-radius: 5px;
   margin: 5px 0;
-  border: 1px solid #e6e8e9;
+  border: 1px solid #23749c;
   background-color: #e6e8e9;
   margin-bottom: 25px;
 `;

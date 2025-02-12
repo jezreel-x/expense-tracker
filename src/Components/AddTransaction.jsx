@@ -45,7 +45,7 @@ const SubmitBtn = styled.button`
   }
 `;
 
-const AddTransaction = ({ setToggle, AddTransactions }) => {
+const AddTransaction = ({ toggle, setToggle, AddTransactions }) => {
   const [amount, setAmount] = useState("");
   const [details, setDetails] = useState("");
   const [transType, setTransType] = useState("expense");
@@ -53,11 +53,10 @@ const AddTransaction = ({ setToggle, AddTransactions }) => {
   const AddTransactionData = () => {
     AddTransactions({
       amount: Number(amount),
-      details,
-      transType,
-      id: Date.now(),
+      details: details,
+      transType: transType
     });
-    setToggle();
+    setToggle(!toggle);
   };
 
   return (

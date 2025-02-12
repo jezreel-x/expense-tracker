@@ -9,7 +9,7 @@ const Container = styled.div`
   flex-direction: column;
   width: 100%;
   max-width: 600px;
-  background-color: #fff;
+  background: #fff;
   padding: 30px 20px;
   border: 1px solid #000;
   border-radius: 5px;
@@ -49,7 +49,7 @@ const ExpenseBox = styled.div`
     font-weight: bold;
     font-size: 25px;
     display: block;
-    color: ${(props) => (props.isExpense ? "red" : "green")};
+    color: ${(isExpense) => (isExpense ? "red" : "green")};
   }
 `;
 
@@ -68,25 +68,24 @@ const Tracker = () => {
   };
 
   const removeTransaction = (id) => {
-    const updatedTransactions = transactions.filter((transaction) => transaction.id !== id);
+    const updatedTransactions = transactions.filter((t) => t.id !== id);
     setTransactions(updatedTransactions);
   };
 
-  const calculateTransactions = () => {
-    let exp = 0;
-    let inc = 0;
-
-    transactions.map((item) => {
-      item.transType === "expense"
-        ? (exp = exp + item.amount)
-        : (inc = inc + item.amount);
-    });
-
-    setExpense(exp);
-    setIncome(inc);
-  };
-
   useEffect(() => {
+
+    const calculateTransactions = () => {
+      let exp = 0;
+      let inc = 0;
+  
+      transactions.map((item, index) => {
+        return(item.transType === "expense" ? (exp = exp + item.amount) : (inc = inc + item.amount));
+      });
+  
+      setExpense(exp);
+      setIncome(inc);
+    };
+
     calculateTransactions();
   }, [transactions]);
 
@@ -103,6 +102,7 @@ const Tracker = () => {
 
       {toggle && (
         <AddTransaction
+          toggle={toggle}
           setToggle={setToggle}
           AddTransactions={AddTransactions}
         />
