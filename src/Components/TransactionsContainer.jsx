@@ -1,48 +1,62 @@
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 import styled from "styled-components";
 import TransactionItem from "./TransactionItem";
 
 const Container = styled.div``;
 
 const Heading = styled.h2`
-  font-size: 25px;
-  font-weight: 600;
+  font-size: ${({ theme }) => theme.typography.size.md};
+  font-weight: ${({ theme }) => theme.typography.weight.semibold};
+  color: ${({ theme }) => theme.colors.text};
+  margin-bottom: ${({ theme }) => theme.space.md};
 `;
 
 const SearchInput = styled.input`
   width: 100%;
-  padding: 15px 20px;
-  border-radius: 5px;
-  margin: 5px 0;
-  border: 1px solid #23749c;
-  background-color: #e6e8e9;
-  margin-bottom: 25px;
+  padding: ${({ theme }) => theme.space.md} ${({ theme }) => theme.space.lg};
+  border-radius: ${({ theme }) => theme.radii.md};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background-color: ${({ theme }) => theme.colors.surfaceMuted};
+  color: ${({ theme }) => theme.colors.text};
+  margin-bottom: ${({ theme }) => theme.space.lg};
+  transition: border-color 150ms ease, box-shadow 150ms ease,
+    background-color 150ms ease;
+
+  &::placeholder {
+    color: ${({ theme }) => theme.colors.textSubtle};
+  }
+
+  &:focus {
+    outline: none;
+    background-color: ${({ theme }) => theme.colors.surface};
+    border-color: ${({ theme }) => theme.colors.accent};
+    box-shadow: 0 0 0 3px ${({ theme }) => theme.colors.focusRing};
+  }
 `;
 
 const TransactionItems = styled.div``;
 
+const EmptyState = styled.p`
+  padding: ${({ theme }) => theme.space.xl};
+  text-align: center;
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: ${({ theme }) => theme.typography.size.sm};
+  background-color: ${({ theme }) => theme.colors.surfaceMuted};
+  border: 1px dashed ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.md};
+`;
+
 const TransactionsContainer = ({ transactions, removeTransaction }) => {
   const [searchInput, setSearchInput] = useState("");
-  const [filteredTransactions, setFilteredTransactions] = useState(transactions);
 
-  useEffect(() => {
+  const filteredTransactions = useMemo(() => {
+    const query = searchInput.trim().toLowerCase();
+    if (!query) return transactions;
 
-    const filteredData = (searchInput) => {
-      if (!searchInput || !searchInput.trim().length) {
-        setFilteredTransactions(transactions);
-        return;
-      }
-  
-      let filtered = [...filteredTransactions];
-      filtered = filtered.filter(
-        (item) =>
-          item.details.toLowerCase().includes(searchInput.toLowerCase().trim())
-      );
-      setFilteredTransactions(filtered);
-    };
-
-    filteredData(searchInput);
-  }, [transactions, searchInput, filteredTransactions]);
+    return transactions.filter((item) =>
+      item.details.toLowerCase().includes(query)
+    );
+  }, [transactions, searchInput]);
 
   return (
     <Container>
@@ -65,7 +79,11 @@ const TransactionsContainer = ({ transactions, removeTransaction }) => {
             />
           ))
         ) : (
-          <p>No Transactions</p>
+          <EmptyState>
+            {searchInput.trim()
+              ? `No transactions match “${searchInput.trim()}”.`
+              : "No transactions yet. Add one to get started."}
+          </EmptyState>
         )}
       </TransactionItems>
     </Container>

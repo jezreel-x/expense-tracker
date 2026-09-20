@@ -1,47 +1,115 @@
 import { useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
+import makeId from "../utils/makeId";
+
+const expand = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
 
 const Container = styled.div`
-  text-align: center;
-  border: 1px solid #000;
-  padding: 20px;
-  border-radius: 5px;
-  margin-bottom: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.space.md};
+  background-color: ${({ theme }) => theme.colors.surfaceMuted};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  padding: ${({ theme }) => theme.space.xl};
+  border-radius: ${({ theme }) => theme.radii.md};
+  margin-bottom: ${({ theme }) => theme.space.xl};
+  animation: ${expand} 180ms ease-out;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 `;
 
 const Input = styled.input`
   width: 100%;
-  padding: 15px 20px;
-  border-radius: 5px;
-  margin: 5px 0;
-  border: 1px solid #000;
+  padding: ${({ theme }) => theme.space.md} ${({ theme }) => theme.space.lg};
+  border-radius: ${({ theme }) => theme.radii.md};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background-color: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+
+  &::placeholder {
+    color: ${({ theme }) => theme.colors.textSubtle};
+  }
+
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.colors.accent};
+    box-shadow: 0 0 0 3px ${({ theme }) => theme.colors.focusRing};
+  }
 `;
 
 const RadioContainer = styled.div`
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: ${({ theme }) => theme.space.sm};
+`;
+
+const RadioGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.space.sm};
 `;
 
 const Label = styled.label`
-  margin-left: 10px;
   cursor: pointer;
+  font-size: ${({ theme }) => theme.typography.size.sm};
+  color: ${({ theme }) => theme.colors.text};
 `;
 
+/* The whole pill is the hit target, not just the 13px radio dot. */
 const RadioBtn = styled(RadioContainer)`
-  margin: 10px 20px 10px 0;
+  flex: 1;
+  padding: ${({ theme }) => theme.space.sm} ${({ theme }) => theme.space.md};
+  border: 1px solid
+    ${({ theme, $checked }) =>
+      $checked ? theme.colors.accent : theme.colors.border};
+  background-color: ${({ theme, $checked }) =>
+    $checked ? theme.colors.accentSoft : theme.colors.surface};
+  border-radius: ${({ theme }) => theme.radii.md};
+  cursor: pointer;
+  transition: border-color 150ms ease, background-color 150ms ease;
+
+  & input {
+    cursor: pointer;
+    accent-color: ${({ theme }) => theme.colors.accent};
+  }
 `;
 
 const SubmitBtn = styled.button`
-  background-color: #44E610;
-  color: #fff;
-  border-radius: 5px;
-  padding: 10px 20px;
-  border: none;
-  outline: none;
+  background-color: ${({ theme }) => theme.colors.accent};
+  color: ${({ theme }) => theme.colors.textInverse};
+  border-radius: ${({ theme }) => theme.radii.md};
+  padding: ${({ theme }) => theme.space.md} ${({ theme }) => theme.space.lg};
+  font-size: ${({ theme }) => theme.typography.size.sm};
+  font-weight: ${({ theme }) => theme.typography.weight.semibold};
+  border: 1px solid ${({ theme }) => theme.colors.accent};
   cursor: pointer;
-  &:hover {
-    background-color: #44E;
+  box-shadow: ${({ theme }) => theme.shadows.sm};
+  transition: background-color 150ms ease, border-color 150ms ease;
+
+  &:hover:not(:disabled) {
+    background-color: ${({ theme }) => theme.colors.accentHover};
+    border-color: ${({ theme }) => theme.colors.accentHover};
+  }
+
+  &:disabled {
+    background-color: ${({ theme }) => theme.colors.surfaceMuted};
+    border-color: ${({ theme }) => theme.colors.border};
+    /* Readable while clearly inactive — white on gray was neither. */
+    color: ${({ theme }) => theme.colors.textSubtle};
+    box-shadow: none;
+    cursor: not-allowed;
   }
 `;
 
@@ -50,10 +118,16 @@ const AddTransaction = ({ toggle, setToggle, AddTransactions }) => {
   const [details, setDetails] = useState("");
   const [transType, setTransType] = useState("expense");
 
+  // Without this an empty form submits as "Ksh 0" with a blank description.
+  const canSubmit = Number(amount) > 0 && details.trim().length > 0;
+
   const AddTransactionData = () => {
+    if (!canSubmit) return;
+
     AddTransactions({
+      id: makeId(),
       amount: Number(amount),
-      details: details,
+      details: details.trim(),
       transType: transType
     });
     setToggle(!toggle);
@@ -75,8 +149,8 @@ const AddTransaction = ({ toggle, setToggle, AddTransactions }) => {
         onChange={(e) => setDetails(e.target.value)}
       />
 
-      <RadioContainer>
-        <RadioBtn>
+      <RadioGroup>
+        <RadioBtn $checked={transType === "expense"}>
           <input
             type="radio"
             id="expense"
@@ -88,7 +162,7 @@ const AddTransaction = ({ toggle, setToggle, AddTransactions }) => {
           <Label htmlFor="expense">Expense</Label>
         </RadioBtn>
 
-        <RadioBtn>
+        <RadioBtn $checked={transType === "income"}>
           <input
             type="radio"
             id="income"
@@ -99,9 +173,11 @@ const AddTransaction = ({ toggle, setToggle, AddTransactions }) => {
           />
           <Label htmlFor="income">Budget</Label>
         </RadioBtn>
-      </RadioContainer>
+      </RadioGroup>
 
-      <SubmitBtn onClick={AddTransactionData}>Add Transaction</SubmitBtn>
+      <SubmitBtn onClick={AddTransactionData} disabled={!canSubmit}>
+        Add transaction
+      </SubmitBtn>
     </Container>
   );
 };
