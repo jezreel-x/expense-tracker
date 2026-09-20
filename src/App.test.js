@@ -1,4 +1,10 @@
-import { render, screen, within, fireEvent } from '@testing-library/react';
+import {
+  render,
+  screen,
+  within,
+  fireEvent,
+  waitForElementToBeRemoved
+} from '@testing-library/react';
 import App from './App';
 
 // Uses fireEvent rather than user-event: the version pinned here (v13)
@@ -45,7 +51,7 @@ test('adding transactions updates the totals and the balance', () => {
   expect(screen.getByText('Ksh 30,000')).toBeInTheDocument();
 });
 
-test('a transaction can be removed', () => {
+test('a transaction can be removed', async () => {
   render(<App />);
 
   addTransaction({ amount: '1500', details: 'Water Bills', type: 'Expense' });
@@ -53,10 +59,11 @@ test('a transaction can be removed', () => {
 
   fireEvent.click(screen.getByRole('button', { name: /remove water bills/i }));
 
-  expect(screen.queryByText('Water Bills')).not.toBeInTheDocument();
+  // The row animates out, so it lingers in the DOM briefly after the click.
+  await waitForElementToBeRemoved(() => screen.queryByText('Water Bills'));
 });
 
-test('search filters the list without discarding non-matching rows', () => {
+test('search filters the list without discarding non-matching rows', async () => {
   render(<App />);
 
   addTransaction({ amount: '5000', details: 'Food', type: 'Expense' });
@@ -66,7 +73,8 @@ test('search filters the list without discarding non-matching rows', () => {
   fireEvent.change(search, { target: { value: 'food' } });
 
   expect(screen.getByText('Food')).toBeInTheDocument();
-  expect(screen.queryByText('WiFi')).not.toBeInTheDocument();
+  // Filtered-out rows animate out, so they outlive the keystroke briefly.
+  await waitForElementToBeRemoved(() => screen.queryByText('WiFi'));
 
   // Clearing the query must bring the filtered-out row back.
   fireEvent.change(search, { target: { value: '' } });

@@ -1,19 +1,9 @@
 import React from "react";
-import styled, { keyframes } from "styled-components";
+import styled from "styled-components";
+import { motion, useReducedMotion } from "framer-motion";
 import formatCurrency from "../utils/formatCurrency";
 
-const appear = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-`;
-
-const Item = styled.div`
+const Item = styled(motion.div)`
   position: relative;
   display: flex;
   justify-content: space-between;
@@ -28,7 +18,6 @@ const Item = styled.div`
   padding-left: ${({ theme }) => theme.space.lg};
   margin-bottom: ${({ theme }) => theme.space.sm};
   transition: border-color 150ms ease, box-shadow 150ms ease;
-  animation: ${appear} 180ms ease-out;
 
   /* A full-height stripe. As a border-left it would be eaten by the
      corner radius and survive only as a short tick in the middle. */
@@ -51,10 +40,6 @@ const Item = styled.div`
   @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
     flex-wrap: wrap;
     row-gap: ${({ theme }) => theme.space.sm};
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
   }
 `;
 
@@ -104,9 +89,21 @@ const RemoveButton = styled.button`
 
 const TransactionItem = ({ transaction, removeTransaction }) => {
   const isExpense = transaction?.transType === "expense";
+  const reduceMotion = useReducedMotion();
 
   return (
-    <Item $isExpense={isExpense}>
+    <Item
+      $isExpense={isExpense}
+      layout={!reduceMotion}
+      initial={reduceMotion ? false : { opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={
+        reduceMotion
+          ? { opacity: 0 }
+          : { opacity: 0, x: -16, height: 0, marginBottom: 0, paddingTop: 0, paddingBottom: 0 }
+      }
+      transition={{ duration: reduceMotion ? 0 : 0.18, ease: "easeOut" }}
+    >
       <Details>{transaction.details}</Details>
       <Amount $isExpense={isExpense}>
         {isExpense ? "-" : "+"}

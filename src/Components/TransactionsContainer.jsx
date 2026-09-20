@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import styled from "styled-components";
+import { AnimatePresence } from "framer-motion";
 import TransactionItem from "./TransactionItem";
 
 const Container = styled.div``;
@@ -70,15 +71,20 @@ const TransactionsContainer = ({ transactions, removeTransaction }) => {
       />
 
       <TransactionItems>
-        {filteredTransactions?.length ? (
-          filteredTransactions.map((transaction) => (
+        {/* AnimatePresence stays mounted even when the list empties: if it
+            unmounts with the last row, that row's exit animation is skipped
+            and it snaps away instead of collapsing. */}
+        <AnimatePresence initial={false}>
+          {filteredTransactions.map((transaction) => (
             <TransactionItem
               transaction={transaction}
               key={transaction.id}
               removeTransaction={removeTransaction}
             />
-          ))
-        ) : (
+          ))}
+        </AnimatePresence>
+
+        {!filteredTransactions?.length && (
           <EmptyState>
             {searchInput.trim()
               ? `No transactions match “${searchInput.trim()}”.`
