@@ -113,6 +113,25 @@ test('the submit button stays disabled until the form is valid', () => {
   expect(submit).toBeEnabled();
 });
 
+test('the theme toggle switches and persists the choice', () => {
+  const { unmount } = render(<App />);
+
+  // Default is light here: jsdom reports no dark system preference.
+  const toDark = screen.getByRole('button', { name: /switch to dark theme/i });
+  fireEvent.click(toDark);
+
+  expect(
+    screen.getByRole('button', { name: /switch to light theme/i })
+  ).toBeInTheDocument();
+
+  unmount();
+  render(<App />);
+
+  expect(
+    screen.getByRole('button', { name: /switch to light theme/i })
+  ).toBeInTheDocument();
+});
+
 test('transactions survive a reload', () => {
   const { unmount } = render(<App />);
 

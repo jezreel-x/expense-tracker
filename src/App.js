@@ -1,7 +1,8 @@
 import React from 'react';
 import styled, { ThemeProvider } from 'styled-components';
 import GlobalStyle from './globalStyles';
-import theme from './theme';
+import { getTheme } from './theme';
+import useThemeMode from './hooks/useThemeMode';
 import Tracker from './Components/Tracker';
 
 
@@ -20,11 +21,13 @@ const MainDiv = styled.div`
 `;
 
 function App() {
+  const { mode, toggle } = useThemeMode();
+
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={getTheme(mode)}>
       <GlobalStyle />
       <MainDiv>
-        <Tracker />
+        <Tracker mode={mode} onToggleTheme={toggle} />
       </MainDiv>
     </ThemeProvider>
   )

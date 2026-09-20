@@ -18,8 +18,18 @@ const GlobalStyle = createGlobalStyle`
         line-height: ${({ theme }) => theme.typography.lineHeight.normal};
         color: ${({ theme }) => theme.colors.text};
         background: ${({ theme }) => theme.colors.background};
+        /* Makes browser-drawn UI — scrollbars, radio dots, number spinners —
+           follow the theme instead of staying light on a dark page. */
+        color-scheme: ${({ theme }) => theme.mode};
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        transition: background-color 200ms ease, color 200ms ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        body {
+            transition: none;
+        }
     }
 
     button,

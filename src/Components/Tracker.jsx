@@ -3,6 +3,7 @@ import styled from "styled-components";
 import AddTransaction from "./AddTransaction";
 import Overview from "./Overview";
 import TransactionsContainer from "./TransactionsContainer";
+import ThemeToggle from "./ThemeToggle";
 import formatCurrency from "../utils/formatCurrency";
 
 const Container = styled.div`
@@ -22,6 +23,10 @@ const Container = styled.div`
 `;
 
 const Header = styled.header`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: ${({ theme }) => theme.space.lg};
   margin-bottom: ${({ theme }) => theme.space.xl};
   padding-bottom: ${({ theme }) => theme.space.lg};
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
@@ -94,7 +99,7 @@ const loadTransactions = () => {
   }
 };
 
-const Tracker = () => {
+const Tracker = ({ mode, onToggleTheme }) => {
   const [toggle, setToggle] = useState(false);
   const [transactions, setTransactions] = useState(loadTransactions);
 
@@ -134,8 +139,11 @@ const Tracker = () => {
   return (
     <Container>
       <Header>
-        <Heading>Expense Tracker</Heading>
-        <Tagline>A simple way of tracking expenses.</Tagline>
+        <div>
+          <Heading>Expense Tracker</Heading>
+          <Tagline>A simple way of tracking expenses.</Tagline>
+        </div>
+        <ThemeToggle mode={mode} onToggle={onToggleTheme} />
       </Header>
 
       <Overview
