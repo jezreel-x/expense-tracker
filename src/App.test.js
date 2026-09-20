@@ -1,7 +1,6 @@
 import {
   render,
   screen,
-  within,
   fireEvent,
   waitForElementToBeRemoved
 } from '@testing-library/react';
@@ -15,7 +14,7 @@ beforeEach(() => {
   window.localStorage.clear();
 });
 
-const addTransaction = ({ amount, details, type }) => {
+const addTransaction = ({ amount, details, type, category, customCategory }) => {
   fireEvent.click(screen.getByRole('button', { name: /add transaction/i }));
   fireEvent.change(screen.getByPlaceholderText(/enter amount/i), {
     target: { value: amount }
@@ -23,6 +22,16 @@ const addTransaction = ({ amount, details, type }) => {
   fireEvent.change(screen.getByPlaceholderText(/enter details/i), {
     target: { value: details }
   });
+  if (category) {
+    fireEvent.change(screen.getByLabelText('Category'), {
+      target: { value: category }
+    });
+  }
+  if (customCategory) {
+    fireEvent.change(screen.getByLabelText('Custom category'), {
+      target: { value: customCategory }
+    });
+  }
   fireEvent.click(screen.getByLabelText(type));
   fireEvent.click(screen.getByRole('button', { name: /^add transaction$/i }));
 };
@@ -113,6 +122,72 @@ test('the submit button stays disabled until the form is valid', () => {
   expect(submit).toBeEnabled();
 });
 
+test('a transaction records and displays its category', () => {
+  render(<App />);
+
+  addTransaction({
+    amount: '1200',
+    details: 'Lunch at Java',
+    type: 'Expense',
+    category: 'Food'
+  });
+
+  expect(screen.getByText('Food')).toBeInTheDocument();
+});
+
+test('a custom category can be entered and is saved', () => {
+  render(<App />);
+
+  addTransaction({
+    amount: '2000',
+    details: 'Monthly contribution',
+    type: 'Expense',
+    category: '__custom__',
+    customCategory: 'Chama'
+  });
+
+  expect(screen.getByText('Chama')).toBeInTheDocument();
+});
+
+test('search matches categories as well as details', async () => {
+  render(<App />);
+
+  addTransaction({
+    amount: '800',
+    details: 'Matatu fare',
+    type: 'Expense',
+    category: 'Transport'
+  });
+  addTransaction({
+    amount: '3000',
+    details: 'Groceries',
+    type: 'Expense',
+    category: 'Food'
+  });
+
+  fireEvent.change(screen.getByPlaceholderText(/search here/i), {
+    target: { value: 'transport' }
+  });
+
+  expect(screen.getByText('Matatu fare')).toBeInTheDocument();
+  await waitForElementToBeRemoved(() => screen.queryByText('Groceries'));
+});
+
+test('transactions saved before categories existed still load', () => {
+  // Shape written by an earlier version: no category field at all.
+  window.localStorage.setItem(
+    'expense-tracker:transactions',
+    JSON.stringify([
+      { id: 'legacy-1', amount: 5000, details: 'Old entry', transType: 'expense' }
+    ])
+  );
+
+  render(<App />);
+
+  expect(screen.getByText('Old entry')).toBeInTheDocument();
+  expect(screen.getByText('Other')).toBeInTheDocument();
+});
+
 test('the theme toggle switches and persists the choice', () => {
   const { unmount } = render(<App />);
 
@@ -139,7 +214,8 @@ test('transactions survive a reload', () => {
   unmount();
 
   render(<App />);
-  const row = screen.getByText('Rent');
-  expect(row).toBeInTheDocument();
-  expect(within(row.parentElement).getByText(/^-Ksh 3,200$/)).toBeInTheDocument();
+  // Only one transaction here, so no scoping is needed — and scoping to a
+  // parent element couples the test to the row's internal markup.
+  expect(screen.getByText('Rent')).toBeInTheDocument();
+  expect(screen.getByText(/^-Ksh 3,200$/)).toBeInTheDocument();
 });

@@ -43,17 +43,39 @@ const Item = styled(motion.div)`
   }
 `;
 
-const Details = styled.span`
+const DetailsBlock = styled.div`
   flex: 1;
   min-width: 0;
-  overflow-wrap: anywhere;
-  color: ${({ theme }) => theme.colors.text};
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.space.xs};
+  align-items: flex-start;
 
   /* Narrow screens: description takes its own line so the amount and the
      Remove button are not squeezed to a few characters each. */
   @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
     flex-basis: 100%;
   }
+`;
+
+const Details = styled.span`
+  overflow-wrap: anywhere;
+  color: ${({ theme }) => theme.colors.text};
+`;
+
+/* Neutral rather than colour-coded per category: categories are open-ended
+   (users can add their own), so there is no fixed palette to assign from. */
+const CategoryChip = styled.span`
+  font-size: ${({ theme }) => theme.typography.size.xs};
+  color: ${({ theme }) => theme.colors.textMuted};
+  background-color: ${({ theme }) => theme.colors.surfaceMuted};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.pill};
+  padding: 2px ${({ theme }) => theme.space.sm};
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `;
 
 const Amount = styled.span`
@@ -104,7 +126,12 @@ const TransactionItem = ({ transaction, removeTransaction }) => {
       }
       transition={{ duration: reduceMotion ? 0 : 0.18, ease: "easeOut" }}
     >
-      <Details>{transaction.details}</Details>
+      <DetailsBlock>
+        <Details>{transaction.details}</Details>
+        {transaction.category && (
+          <CategoryChip>{transaction.category}</CategoryChip>
+        )}
+      </DetailsBlock>
       <Amount $isExpense={isExpense}>
         {isExpense ? "-" : "+"}
         {formatCurrency(transaction.amount)}

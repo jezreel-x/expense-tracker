@@ -54,8 +54,11 @@ const TransactionsContainer = ({ transactions, removeTransaction }) => {
     const query = searchInput.trim().toLowerCase();
     if (!query) return transactions;
 
-    return transactions.filter((item) =>
-      item.details.toLowerCase().includes(query)
+    // Match the category too, so "food" finds everything filed under it.
+    return transactions.filter(
+      (item) =>
+        item.details.toLowerCase().includes(query) ||
+        (item.category || "").toLowerCase().includes(query)
     );
   }, [transactions, searchInput]);
 

@@ -5,6 +5,7 @@ import Overview from "./Overview";
 import TransactionsContainer from "./TransactionsContainer";
 import ThemeToggle from "./ThemeToggle";
 import formatCurrency from "../utils/formatCurrency";
+import normalizeTransaction from "../utils/normalizeTransaction";
 
 const Container = styled.div`
   display: flex;
@@ -93,7 +94,10 @@ const loadTransactions = () => {
     if (!stored) return [];
 
     const parsed = JSON.parse(stored);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+
+    // Fill in fields added after these entries were saved.
+    return parsed.map(normalizeTransaction).filter(Boolean);
   } catch {
     return [];
   }
