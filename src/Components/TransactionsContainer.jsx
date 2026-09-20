@@ -68,7 +68,11 @@ const EmptyState = styled.p`
   border-radius: ${({ theme }) => theme.radii.md};
 `;
 
-const TransactionsContainer = ({ transactions, removeTransaction }) => {
+const TransactionsContainer = ({
+  transactions,
+  removeTransaction,
+  updateTransaction
+}) => {
   const [searchInput, setSearchInput] = useState("");
   const reduceMotion = useReducedMotion();
 
@@ -123,6 +127,7 @@ const TransactionsContainer = ({ transactions, removeTransaction }) => {
                     transaction={transaction}
                     key={transaction.id}
                     removeTransaction={removeTransaction}
+                    updateTransaction={updateTransaction}
                   />
                 ))}
               </AnimatePresence>

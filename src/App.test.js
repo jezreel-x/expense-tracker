@@ -239,6 +239,96 @@ test('undated transactions group under Earlier rather than being dated', () => {
   expect(screen.queryByRole('heading', { name: 'Today' })).not.toBeInTheDocument();
 });
 
+test('a transaction can be edited', () => {
+  render(<App />);
+
+  addTransaction({
+    amount: '1500',
+    details: 'Lunhc',
+    type: 'Expense',
+    category: 'Food'
+  });
+
+  fireEvent.click(screen.getByRole('button', { name: /edit lunhc/i }));
+
+  fireEvent.change(screen.getByLabelText('Edit details'), {
+    target: { value: 'Lunch' }
+  });
+  fireEvent.change(screen.getByLabelText('Edit amount'), {
+    target: { value: '1800' }
+  });
+  fireEvent.click(screen.getByRole('button', { name: /^save$/i }));
+
+  expect(screen.getByText('Lunch')).toBeInTheDocument();
+  expect(screen.queryByText('Lunhc')).not.toBeInTheDocument();
+  // The totals follow the edit.
+  expect(screen.getByText('Ksh 1,800')).toBeInTheDocument();
+});
+
+test('cancelling an edit discards the changes', () => {
+  render(<App />);
+
+  addTransaction({
+    amount: '1500',
+    details: 'Lunch',
+    type: 'Expense',
+    category: 'Food'
+  });
+
+  fireEvent.click(screen.getByRole('button', { name: /edit lunch/i }));
+  fireEvent.change(screen.getByLabelText('Edit details'), {
+    target: { value: 'Something else' }
+  });
+  fireEvent.click(screen.getByRole('button', { name: /^cancel$/i }));
+
+  expect(screen.getByText('Lunch')).toBeInTheDocument();
+  expect(screen.queryByText('Something else')).not.toBeInTheDocument();
+});
+
+test('an edited category can be changed to a custom one', () => {
+  render(<App />);
+
+  addTransaction({
+    amount: '1500',
+    details: 'Contribution',
+    type: 'Expense',
+    category: 'Other'
+  });
+
+  fireEvent.click(screen.getByRole('button', { name: /edit contribution/i }));
+  fireEvent.change(screen.getByLabelText('Edit category'), {
+    target: { value: '__custom__' }
+  });
+  fireEvent.change(screen.getByLabelText('Edit custom category'), {
+    target: { value: 'Chama' }
+  });
+  fireEvent.click(screen.getByRole('button', { name: /^save$/i }));
+
+  expect(screen.getByText('Chama')).toBeInTheDocument();
+});
+
+test('edits survive a reload', () => {
+  const { unmount } = render(<App />);
+
+  addTransaction({
+    amount: '1500',
+    details: 'Lunch',
+    type: 'Expense',
+    category: 'Food'
+  });
+
+  fireEvent.click(screen.getByRole('button', { name: /edit lunch/i }));
+  fireEvent.change(screen.getByLabelText('Edit amount'), {
+    target: { value: '2400' }
+  });
+  fireEvent.click(screen.getByRole('button', { name: /^save$/i }));
+
+  unmount();
+  render(<App />);
+
+  expect(screen.getByText(/^-Ksh 2,400$/)).toBeInTheDocument();
+});
+
 test('the theme toggle switches and persists the choice', () => {
   const { unmount } = render(<App />);
 

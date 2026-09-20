@@ -1,11 +1,9 @@
 import { useState } from "react";
 import styled, { keyframes } from "styled-components";
 import makeId from "../utils/makeId";
-import {
-  PRESET_CATEGORIES,
-  DEFAULT_CATEGORY,
-  CUSTOM_CATEGORY
-} from "../constants/categories";
+import CategoryField from "./CategoryField";
+import { Input } from "./ui/fields";
+import { DEFAULT_CATEGORY } from "../constants/categories";
 
 const expand = keyframes`
   from {
@@ -31,43 +29,6 @@ const Container = styled.div`
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;
-  }
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: ${({ theme }) => theme.space.md} ${({ theme }) => theme.space.lg};
-  border-radius: ${({ theme }) => theme.radii.md};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  background-color: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.text};
-  transition: border-color 150ms ease, box-shadow 150ms ease;
-
-  &::placeholder {
-    color: ${({ theme }) => theme.colors.textSubtle};
-  }
-
-  &:focus {
-    outline: none;
-    border-color: ${({ theme }) => theme.colors.accent};
-    box-shadow: 0 0 0 3px ${({ theme }) => theme.colors.focusRing};
-  }
-`;
-
-const Select = styled.select`
-  width: 100%;
-  padding: ${({ theme }) => theme.space.md} ${({ theme }) => theme.space.lg};
-  border-radius: ${({ theme }) => theme.radii.md};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  background-color: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.text};
-  cursor: pointer;
-  transition: border-color 150ms ease, box-shadow 150ms ease;
-
-  &:focus {
-    outline: none;
-    border-color: ${({ theme }) => theme.colors.accent};
-    box-shadow: 0 0 0 3px ${({ theme }) => theme.colors.focusRing};
   }
 `;
 
@@ -140,12 +101,8 @@ const AddTransaction = ({ toggle, setToggle, AddTransactions }) => {
   const [details, setDetails] = useState("");
   const [transType, setTransType] = useState("expense");
   const [category, setCategory] = useState(DEFAULT_CATEGORY);
-  const [customCategory, setCustomCategory] = useState("");
 
-  const usingCustomCategory = category === CUSTOM_CATEGORY;
-  const resolvedCategory = usingCustomCategory
-    ? customCategory.trim()
-    : category;
+  const resolvedCategory = category.trim();
 
   // Without this an empty form submits as "Ksh 0" with a blank description.
   const canSubmit =
@@ -183,28 +140,7 @@ const AddTransaction = ({ toggle, setToggle, AddTransactions }) => {
         onChange={(e) => setDetails(e.target.value)}
       />
 
-      <Select
-        aria-label="Category"
-        value={category}
-        onChange={(e) => setCategory(e.target.value)}
-      >
-        {PRESET_CATEGORIES.map((preset) => (
-          <option key={preset} value={preset}>
-            {preset}
-          </option>
-        ))}
-        <option value={CUSTOM_CATEGORY}>Custom category…</option>
-      </Select>
-
-      {usingCustomCategory && (
-        <Input
-          type="text"
-          aria-label="Custom category"
-          placeholder="Name your category"
-          value={customCategory}
-          onChange={(e) => setCustomCategory(e.target.value)}
-        />
-      )}
+      <CategoryField value={category} onChange={setCategory} />
 
       <RadioGroup>
         <RadioBtn $checked={transType === "expense"}>

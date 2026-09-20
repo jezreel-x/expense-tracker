@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { motion, useReducedMotion } from "framer-motion";
+import CategoryField from "./CategoryField";
+import { Input } from "./ui/fields";
 import formatCurrency from "../utils/formatCurrency";
 
 const Item = styled(motion.div)`
@@ -90,6 +92,81 @@ const Amount = styled.span`
   }
 `;
 
+const EditRow = styled(motion.div)`
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.space.sm};
+  background-color: ${({ theme }) => theme.colors.surfaceMuted};
+  border: 1px solid ${({ theme }) => theme.colors.accent};
+  border-radius: ${({ theme }) => theme.radii.md};
+  padding: ${({ theme }) => theme.space.lg};
+  margin-bottom: ${({ theme }) => theme.space.sm};
+`;
+
+const EditActions = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.space.sm};
+  justify-content: flex-end;
+`;
+
+const GhostButton = styled.button`
+  flex-shrink: 0;
+  background: none;
+  color: ${({ theme }) => theme.colors.textSubtle};
+  border: 1px solid transparent;
+  padding: ${({ theme }) => theme.space.xs} ${({ theme }) => theme.space.sm};
+  border-radius: ${({ theme }) => theme.radii.sm};
+  font-size: ${({ theme }) => theme.typography.size.sm};
+  cursor: pointer;
+  transition: color 150ms ease, background-color 150ms ease,
+    border-color 150ms ease;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.accent};
+    background-color: ${({ theme }) => theme.colors.accentSoft};
+    border-color: ${({ theme }) => theme.colors.accentSoft};
+  }
+`;
+
+const SaveButton = styled.button`
+  background-color: ${({ theme }) => theme.colors.accent};
+  color: ${({ theme }) => theme.colors.textInverse};
+  border: 1px solid ${({ theme }) => theme.colors.accent};
+  padding: ${({ theme }) => theme.space.sm} ${({ theme }) => theme.space.lg};
+  border-radius: ${({ theme }) => theme.radii.md};
+  font-size: ${({ theme }) => theme.typography.size.sm};
+  font-weight: ${({ theme }) => theme.typography.weight.semibold};
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background-color: ${({ theme }) => theme.colors.accentHover};
+    border-color: ${({ theme }) => theme.colors.accentHover};
+  }
+
+  &:disabled {
+    background-color: ${({ theme }) => theme.colors.surfaceMuted};
+    border-color: ${({ theme }) => theme.colors.border};
+    color: ${({ theme }) => theme.colors.textSubtle};
+    cursor: not-allowed;
+  }
+`;
+
+const CancelButton = styled.button`
+  background: none;
+  color: ${({ theme }) => theme.colors.textMuted};
+  border: 1px solid ${({ theme }) => theme.colors.borderStrong};
+  padding: ${({ theme }) => theme.space.sm} ${({ theme }) => theme.space.lg};
+  border-radius: ${({ theme }) => theme.radii.md};
+  font-size: ${({ theme }) => theme.typography.size.sm};
+  cursor: pointer;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.text};
+    background-color: ${({ theme }) => theme.colors.surface};
+  }
+`;
+
 const RemoveButton = styled.button`
   flex-shrink: 0;
   background: none;
@@ -109,9 +186,76 @@ const RemoveButton = styled.button`
   }
 `;
 
-const TransactionItem = ({ transaction, removeTransaction }) => {
+const TransactionItem = ({
+  transaction,
+  removeTransaction,
+  updateTransaction
+}) => {
   const isExpense = transaction?.transType === "expense";
   const reduceMotion = useReducedMotion();
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [amount, setAmount] = useState(String(transaction.amount));
+  const [details, setDetails] = useState(transaction.details);
+  const [category, setCategory] = useState(transaction.category || "");
+
+  // Reset the draft from the saved values, so cancelling discards edits and
+  // reopening never shows a stale draft.
+  const startEditing = () => {
+    setAmount(String(transaction.amount));
+    setDetails(transaction.details);
+    setCategory(transaction.category || "");
+    setIsEditing(true);
+  };
+
+  const canSave =
+    Number(amount) > 0 && details.trim().length > 0 && category.trim().length > 0;
+
+  const save = () => {
+    if (!canSave) return;
+
+    updateTransaction(transaction.id, {
+      amount: Number(amount),
+      details: details.trim(),
+      category: category.trim()
+    });
+    setIsEditing(false);
+  };
+
+  if (isEditing) {
+    return (
+      <EditRow
+        $isExpense={isExpense}
+        layout={!reduceMotion}
+        transition={{ duration: reduceMotion ? 0 : 0.18, ease: "easeOut" }}
+      >
+        <Input
+          type="number"
+          aria-label="Edit amount"
+          value={amount}
+          onChange={(event) => setAmount(event.target.value)}
+        />
+        <Input
+          type="text"
+          aria-label="Edit details"
+          value={details}
+          onChange={(event) => setDetails(event.target.value)}
+        />
+        <CategoryField
+          value={category}
+          onChange={setCategory}
+          selectLabel="Edit category"
+          customLabel="Edit custom category"
+        />
+        <EditActions>
+          <SaveButton onClick={save} disabled={!canSave}>
+            Save
+          </SaveButton>
+          <CancelButton onClick={() => setIsEditing(false)}>Cancel</CancelButton>
+        </EditActions>
+      </EditRow>
+    );
+  }
 
   return (
     <Item
@@ -136,6 +280,12 @@ const TransactionItem = ({ transaction, removeTransaction }) => {
         {isExpense ? "-" : "+"}
         {formatCurrency(transaction.amount)}
       </Amount>
+      <GhostButton
+        onClick={startEditing}
+        aria-label={`Edit ${transaction.details}`}
+      >
+        Edit
+      </GhostButton>
       <RemoveButton
         onClick={() => removeTransaction(transaction.id)}
         aria-label={`Remove ${transaction.details}`}

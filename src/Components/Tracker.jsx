@@ -12,6 +12,12 @@ const Container = styled.div`
   flex-direction: column;
   width: 100%;
   max-width: 600px;
+
+  /* Two columns once there is room for them. Below this the layout is
+     unchanged: a single 600px column. */
+  @media (min-width: 900px) {
+    max-width: 960px;
+  }
   background: ${({ theme }) => theme.colors.surface};
   padding: ${({ theme }) => theme.space["2xl"]};
   border: 1px solid ${({ theme }) => theme.colors.border};
@@ -113,6 +119,14 @@ const Tracker = ({ mode, onToggleTheme }) => {
     setTransactions(transactionArray);
   };
 
+  const updateTransaction = (id, changes) => {
+    setTransactions((current) =>
+      current.map((transaction) =>
+        transaction.id === id ? { ...transaction, ...changes } : transaction
+      )
+    );
+  };
+
   const removeTransaction = (id) => {
     const updatedTransactions = transactions.filter((t) => t.id !== id);
     setTransactions(updatedTransactions);
@@ -180,6 +194,7 @@ const Tracker = ({ mode, onToggleTheme }) => {
       <TransactionsContainer
         transactions={transactions}
         removeTransaction={removeTransaction}
+        updateTransaction={updateTransaction}
       />
     </Container>
   );
