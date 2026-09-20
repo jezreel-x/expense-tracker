@@ -161,6 +161,7 @@ const AddTransaction = ({ toggle, setToggle, AddTransactions }) => {
       amount: Number(amount),
       details: details.trim(),
       category: resolvedCategory,
+      createdAt: Date.now(),
       transType: transType
     });
     setToggle(!toggle);

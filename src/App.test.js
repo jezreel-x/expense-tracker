@@ -188,6 +188,57 @@ test('transactions saved before categories existed still load', () => {
   expect(screen.getByText('Other')).toBeInTheDocument();
 });
 
+test('new transactions are grouped under Today', () => {
+  render(<App />);
+
+  addTransaction({ amount: '900', details: 'Breakfast', type: 'Expense' });
+
+  expect(screen.getByRole('heading', { name: 'Today' })).toBeInTheDocument();
+});
+
+test('older transactions get their own day heading', () => {
+  const twoDaysAgo = Date.now() - 2 * 24 * 60 * 60 * 1000;
+
+  window.localStorage.setItem(
+    'expense-tracker:transactions',
+    JSON.stringify([
+      {
+        id: 'a',
+        amount: 500,
+        details: 'Older entry',
+        category: 'Food',
+        transType: 'expense',
+        createdAt: twoDaysAgo
+      }
+    ])
+  );
+
+  render(<App />);
+
+  expect(screen.getByText('Older entry')).toBeInTheDocument();
+  // Two days back is neither Today nor Yesterday, so it gets a date label.
+  expect(screen.queryByRole('heading', { name: 'Today' })).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole('heading', { name: 'Yesterday' })
+  ).not.toBeInTheDocument();
+});
+
+test('undated transactions group under Earlier rather than being dated', () => {
+  // Shape written before timestamps were recorded.
+  window.localStorage.setItem(
+    'expense-tracker:transactions',
+    JSON.stringify([
+      { id: 'legacy-1', amount: 5000, details: 'Old entry', transType: 'expense' }
+    ])
+  );
+
+  render(<App />);
+
+  expect(screen.getByText('Old entry')).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Earlier' })).toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: 'Today' })).not.toBeInTheDocument();
+});
+
 test('the theme toggle switches and persists the choice', () => {
   const { unmount } = render(<App />);
 

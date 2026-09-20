@@ -1,7 +1,12 @@
 import { DEFAULT_CATEGORY } from "../constants/categories";
 
-// Transactions saved before categories existed have no `category` field.
-// Rather than rejecting them, fill the gap on read so old data keeps working.
+// Transactions saved by earlier versions are missing fields added since.
+// Rather than rejecting them, fill what can be filled on read so old data
+// keeps working.
+//
+// `createdAt` is deliberately left absent when missing rather than defaulted
+// to now: dating an old entry as today would be inventing information. The
+// list groups these under "Earlier" instead.
 const normalizeTransaction = (transaction) => {
   if (!transaction || typeof transaction !== "object") return null;
 
@@ -10,7 +15,10 @@ const normalizeTransaction = (transaction) => {
       ? transaction.category.trim()
       : DEFAULT_CATEGORY;
 
-  return { ...transaction, category };
+  const timestamp = Number(transaction.createdAt);
+  const createdAt = Number.isFinite(timestamp) && timestamp > 0 ? timestamp : null;
+
+  return { ...transaction, category, createdAt };
 };
 
 export default normalizeTransaction;

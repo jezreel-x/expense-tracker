@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from "react";
 import styled from "styled-components";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import TransactionItem from "./TransactionItem";
+import groupByDay from "../utils/groupByDay";
 
 const Container = styled.div``;
 
@@ -37,6 +38,26 @@ const SearchInput = styled.input`
 
 const TransactionItems = styled.div``;
 
+/* A motion component so a day can animate away with its last transaction.
+   Rendering the group behind a plain length check would unmount it — and the
+   AnimatePresence inside it — before that row's exit could run. */
+const DayGroup = styled(motion.section)`
+  overflow: hidden;
+
+  & + & {
+    margin-top: ${({ theme }) => theme.space.lg};
+  }
+`;
+
+const DayLabel = styled.h3`
+  font-size: ${({ theme }) => theme.typography.size.xs};
+  font-weight: ${({ theme }) => theme.typography.weight.semibold};
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors.textMuted};
+  margin-bottom: ${({ theme }) => theme.space.sm};
+`;
+
 const EmptyState = styled.p`
   padding: ${({ theme }) => theme.space.xl};
   text-align: center;
@@ -49,6 +70,7 @@ const EmptyState = styled.p`
 
 const TransactionsContainer = ({ transactions, removeTransaction }) => {
   const [searchInput, setSearchInput] = useState("");
+  const reduceMotion = useReducedMotion();
 
   const filteredTransactions = useMemo(() => {
     const query = searchInput.trim().toLowerCase();
@@ -61,6 +83,11 @@ const TransactionsContainer = ({ transactions, removeTransaction }) => {
         (item.category || "").toLowerCase().includes(query)
     );
   }, [transactions, searchInput]);
+
+  const groupedTransactions = useMemo(
+    () => groupByDay(filteredTransactions),
+    [filteredTransactions]
+  );
 
   return (
     <Container>
@@ -78,12 +105,28 @@ const TransactionsContainer = ({ transactions, removeTransaction }) => {
             unmounts with the last row, that row's exit animation is skipped
             and it snaps away instead of collapsing. */}
         <AnimatePresence initial={false}>
-          {filteredTransactions.map((transaction) => (
-            <TransactionItem
-              transaction={transaction}
-              key={transaction.id}
-              removeTransaction={removeTransaction}
-            />
+          {groupedTransactions.map((group) => (
+            <DayGroup
+              key={group.key}
+              layout={!reduceMotion}
+              exit={
+                reduceMotion
+                  ? { opacity: 0 }
+                  : { opacity: 0, height: 0, marginTop: 0 }
+              }
+              transition={{ duration: reduceMotion ? 0 : 0.18, ease: "easeOut" }}
+            >
+              <DayLabel>{group.label}</DayLabel>
+              <AnimatePresence initial={false}>
+                {group.items.map((transaction) => (
+                  <TransactionItem
+                    transaction={transaction}
+                    key={transaction.id}
+                    removeTransaction={removeTransaction}
+                  />
+                ))}
+              </AnimatePresence>
+            </DayGroup>
           ))}
         </AnimatePresence>
 
