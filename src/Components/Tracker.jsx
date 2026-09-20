@@ -47,6 +47,30 @@ const Heading = styled.h1`
   color: ${({ theme }) => theme.colors.text};
 `;
 
+const Columns = styled.div`
+  @media (min-width: 900px) {
+    display: grid;
+    /* 380px leaves the two stat boxes ~150px of content each, enough for a
+       six-figure amount at the size they are set in. */
+    grid-template-columns: 380px 1fr;
+    gap: ${({ theme }) => theme.space["2xl"]};
+    align-items: start;
+  }
+`;
+
+/* Sticky so the balance and totals stay visible while a long list scrolls —
+   which is the point of a tracker. */
+const Summary = styled.div`
+  @media (min-width: 900px) {
+    position: sticky;
+    top: ${({ theme }) => theme.space.lg};
+  }
+`;
+
+const ListColumn = styled.div`
+  min-width: 0;
+`;
+
 const TransactionDetails = styled.div`
   display: flex;
   gap: ${({ theme }) => theme.space.lg};
@@ -164,38 +188,44 @@ const Tracker = ({ mode, onToggleTheme }) => {
         <ThemeToggle mode={mode} onToggle={onToggleTheme} />
       </Header>
 
-      <Overview
-        toggle={toggle}
-        setToggle={setToggle}
-        expense={expense}
-        income={income}
-      />
+      <Columns>
+        <Summary>
+          <Overview
+            toggle={toggle}
+            setToggle={setToggle}
+            expense={expense}
+            income={income}
+          />
 
-      {toggle && (
-        <AddTransaction
-          toggle={toggle}
-          setToggle={setToggle}
-          AddTransactions={AddTransactions}
-        />
-      )}
+          {toggle && (
+            <AddTransaction
+              toggle={toggle}
+              setToggle={setToggle}
+              AddTransactions={AddTransactions}
+            />
+          )}
 
-      <TransactionDetails>
-        <StatBox $isExpense>
-          <span>Expense</span>
-          <span>{formatCurrency(expense)}</span>
-        </StatBox>
+          <TransactionDetails>
+            <StatBox $isExpense>
+              <span>Expense</span>
+              <span>{formatCurrency(expense)}</span>
+            </StatBox>
 
-        <StatBox>
-          <span>Budget</span>
-          <span>{formatCurrency(income)}</span>
-        </StatBox>
-      </TransactionDetails>
+            <StatBox>
+              <span>Budget</span>
+              <span>{formatCurrency(income)}</span>
+            </StatBox>
+          </TransactionDetails>
+        </Summary>
 
-      <TransactionsContainer
-        transactions={transactions}
-        removeTransaction={removeTransaction}
-        updateTransaction={updateTransaction}
-      />
+        <ListColumn>
+          <TransactionsContainer
+            transactions={transactions}
+            removeTransaction={removeTransaction}
+            updateTransaction={updateTransaction}
+          />
+        </ListColumn>
+      </Columns>
     </Container>
   );
 };
